@@ -1,20 +1,25 @@
+
 import { useState, useEffect, useRef } from "react";
+
 import Navbar from "../components/Navbar";
 import CategoryFilter from "../components/CategoryFilter";
 import ProductCard from "../components/ProductCard";
+
 import products from "../data/products";
+import { useCart } from "../context/CartContext";
+
 import "../App.css";
 
 function Home() {
+
+  // Shared cart state
+  const { cartCount, addToCart } = useCart();
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
 
   // Category state
   const [selectedCategory, setSelectedCategory] = useState("All");
-
-  // Cart state
-  const [cart, setCart] = useState([]);
 
   // Reference for the search input
   const searchRef = useRef(null);
@@ -62,34 +67,6 @@ function Home() {
 
     return matchesCategory && matchesSearch;
   });
-
-  // Add product to cart
-  const handleAddToCart = (product) => {
-    setCart((previousCart) => {
-      const existingItem = previousCart.find(
-        (item) => item.id === product.id
-      );
-
-      if (existingItem) {
-        return previousCart.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-
-      return [
-        ...previousCart,
-        { ...product, quantity: 1 }
-      ];
-    });
-  };
-
-  // Calculate total cart quantity
-  const cartCount = cart.reduce(
-    (total, item) => total + item.quantity,
-    0
-  );
 
   return (
     <div className="app">
@@ -144,7 +121,6 @@ function Home() {
                 <ProductCard
                   key={product.id}
                   product={product}
-                  onAddToCart={handleAddToCart}
                 />
               ))}
             </div>

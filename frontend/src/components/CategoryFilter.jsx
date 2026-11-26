@@ -1,21 +1,19 @@
+
 function CategoryFilter({ categories, selectedCategory, onCategoryChange }) {
   return (
     <div className="category-filter">
-
       {categories.map((category) => (
         <button
           key={category}
-          className={
-            selectedCategory === category
-              ? "category-btn active"
-              : "category-btn"
-          }
+          type="button"
+          className={`category-btn ${
+            selectedCategory === category ? "active" : ""
+          }`}
           onClick={() => onCategoryChange(category)}
         >
           {category}
         </button>
       ))}
-
     </div>
   );
 }
