@@ -338,3 +338,131 @@
     font-size: 23px;
   }
 }
+
+/* Product title navigation */
+.product-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.product-title-link:hover {
+  text-decoration: underline;
+}
+
+/* Product details page */
+.details-container {
+  max-width: 1100px;
+  margin: 50px auto;
+  padding: 0 24px;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 28px;
+  color: #555;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.back-link:hover {
+  color: #111;
+}
+
+.details-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+  padding: 36px;
+  border: 1px solid #e8e8e8;
+  border-radius: 16px;
+}
+
+.details-image {
+  min-height: 350px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f2;
+  border-radius: 12px;
+  color: #777;
+}
+
+.details-category {
+  color: #777;
+  font-size: 14px;
+}
+
+.details-info h1 {
+  margin: 12px 0;
+  font-size: 32px;
+}
+
+.details-price {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.details-description {
+  margin: 20px 0;
+  color: #666;
+  line-height: 1.7;
+}
+
+.details-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #222;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.details-button:hover {
+  background: #444;
+}
+
+/* 404 page */
+.not-found {
+  min-height: 75vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.not-found-code {
+  margin: 0;
+  font-size: 90px;
+  font-weight: 800;
+  color: #222;
+}
+
+.not-found p:not(.not-found-code) {
+  color: #777;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 700px) {
+  .details-card {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 20px;
+  }
+
+  .details-image {
+    min-height: 240px;
+  }
+
+  .details-info h1 {
+    font-size: 25px;
+  }
+}

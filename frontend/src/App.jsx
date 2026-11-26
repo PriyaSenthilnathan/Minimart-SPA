@@ -1,184 +1,21 @@
-import { useState, useEffect, useRef } from "react";
+import { Routes, Route } from "react-router-dom";
 
-import Navbar from "./components/Navbar";
-import CategoryFilter from "./components/CategoryFilter";
-import ProductCard from "./components/ProductCard";
-
-import products from "./data/products";
-
-import "./App.css";
+import Home from "./pages/Home";
+import ProductDetails from "./pages/ProductDetails";
+import NotFound from "./pages/NotFound";
 
 function App() {
-
-  // Search state
-  const [searchQuery, setSearchQuery] = useState("");
-
-  // Category state
-  const [selectedCategory, setSelectedCategory] = useState("All");
-
-  // Cart state
-  const [cart, setCart] = useState([]);
-
-  // Reference for the search input
-  const searchRef = useRef(null);
-
-  // Get unique categories
-  const categories = [
-    "All",
-    ...new Set(products.map((product) => product.category))
-  ];
-
-  // Update document title
-  useEffect(() => {
-    document.title = "MINIMART | Everyday Essentials";
-  }, []);
-
-  // Focus search when the "/" key is pressed
-  useEffect(() => {
-    function handleKeyDown(event) {
-      if (
-        event.key === "/" &&
-        document.activeElement.tagName !== "INPUT" &&
-        document.activeElement.tagName !== "TEXTAREA"
-      ) {
-        event.preventDefault();
-        searchRef.current?.focus();
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
-
-  // Filter products
-  const filteredProducts = products.filter((product) => {
-
-    const matchesCategory =
-      selectedCategory === "All" ||
-      product.category === selectedCategory;
-
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchQuery.toLowerCase());
-
-    return matchesCategory && matchesSearch;
-  });
-
-  // Add product to cart
-  const handleAddToCart = (product) => {
-    setCart((previousCart) => {
-      const existingItem = previousCart.find(
-        (item) => item.id === product.id
-      );
-
-      if (existingItem) {
-        return previousCart.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      }
-
-      return [
-        ...previousCart,
-        { ...product, quantity: 1 }
-      ];
-    });
-  };
-
-  // Calculate total cart quantity
-  const cartCount = cart.reduce(
-    (total, item) => total + item.quantity,
-    0
-  );
-
   return (
-    <div className="app">
+    <Routes>
+      <Route path="/" element={<Home />} />
 
-      <Navbar
-        cartCount={cartCount}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        searchRef={searchRef}
+      <Route
+        path="/product/:id"
+        element={<ProductDetails />}
       />
 
-      <main className="main-container">
-
-        <section className="hero-section">
-          <p className="hero-label">SIMPLE THINGS. BETTER LIVING.</p>
-
-          <h1>
-            Everyday essentials,
-            <br />
-            thoughtfully selected.
-          </h1>
-
-          <p className="hero-description">
-            Discover useful products designed to make
-            everyday life a little simpler.
-          </p>
-        </section>
-
-        <section className="shop-section">
-
-          <div className="section-heading">
-            <div>
-              <p className="section-label">OUR COLLECTION</p>
-              <h2>Explore products</h2>
-            </div>
-
-            <span className="product-count">
-              {filteredProducts.length} products
-            </span>
-          </div>
-
-          <CategoryFilter
-            categories={categories}
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-          />
-
-          {filteredProducts.length > 0 ? (
-
-            <div className="product-grid">
-              {filteredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onAddToCart={handleAddToCart}
-                />
-              ))}
-            </div>
-
-          ) : (
-
-            <div className="empty-state">
-              <h3>No products found</h3>
-              <p>Try another search or category.</p>
-
-              <button
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory("All");
-                }}
-              >
-                Clear filters
-              </button>
-            </div>
-
-          )}
-
-        </section>
-
-      </main>
-
-      <footer className="footer">
-        <p>© 2026 MINIMART. Made for everyday living.</p>
-      </footer>
-
-    </div>
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }
 
