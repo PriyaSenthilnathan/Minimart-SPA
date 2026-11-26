@@ -1166,3 +1166,22 @@
     padding: 20px;
   }
 }
+
+.checkout-error {
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  border: 1px solid #e8b4b4;
+  border-radius: 8px;
+  background: #fff5f5;
+  color: #a12d2d;
+}
+
+.checkout-error p {
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+.place-order-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

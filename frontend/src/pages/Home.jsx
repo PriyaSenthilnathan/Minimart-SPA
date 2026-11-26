@@ -1,19 +1,20 @@
 
 import { useState, useEffect, useRef } from "react";
-
 import Navbar from "../components/Navbar";
 import CategoryFilter from "../components/CategoryFilter";
 import ProductCard from "../components/ProductCard";
-
-import products from "../data/products";
 import { useCart } from "../context/CartContext";
-
+import { getProducts } from "../services/api";
 import "../App.css";
 
 function Home() {
+  const { cartCount } = useCart();
 
-  // Shared cart state
-  const { cartCount, addToCart } = useCart();
+  // Product data from Flask API
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [retryCount, setRetryCount] = useState(0);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -21,21 +22,51 @@ function Home() {
   // Category state
   const [selectedCategory, setSelectedCategory] = useState("All");
 
-  // Reference for the search input
+  // Reference for search input
   const searchRef = useRef(null);
 
-  // Get unique categories
-  const categories = [
-    "All",
-    ...new Set(products.map((product) => product.category))
-  ];
+  // Fetch products from Flask
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function fetchProducts() {
+      try {
+        setIsLoading(true);
+        setError("");
+
+        const data = await getProducts({
+          signal: controller.signal
+        });
+
+        if (!Array.isArray(data)) {
+          throw new Error("Invalid product data received from server.");
+        }
+
+        setProducts(data);
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          setError(err.message);
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    fetchProducts();
+
+    return () => {
+      controller.abort();
+    };
+  }, [retryCount]);
 
   // Update document title
   useEffect(() => {
     document.title = "MINIMART | Everyday Essentials";
   }, []);
 
-  // Focus search when the "/" key is pressed
+  // Focus search when "/" key is pressed
   useEffect(() => {
     function handleKeyDown(event) {
       if (
@@ -55,9 +86,14 @@ function Home() {
     };
   }, []);
 
+  // Get unique categories from API products
+  const categories = [
+    "All",
+    ...new Set(products.map((product) => product.category))
+  ];
+
   // Filter products
   const filteredProducts = products.filter((product) => {
-
     const matchesCategory =
       selectedCategory === "All" ||
       product.category === selectedCategory;
@@ -104,43 +140,76 @@ function Home() {
             </div>
 
             <span className="product-count">
-              {filteredProducts.length} products
+              {isLoading ? "Loading..." : `${filteredProducts.length} products`}
             </span>
           </div>
 
-          <CategoryFilter
-            categories={categories}
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-          />
+          {!isLoading && !error && products.length > 0 && (
+            <CategoryFilter
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+            />
+          )}
 
-          {filteredProducts.length > 0 ? (
-
-            <div className="product-grid">
-              {filteredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                />
-              ))}
-            </div>
-
-          ) : (
-
+          {/* Loading State */}
+          {isLoading && (
             <div className="empty-state">
-              <h3>No products found</h3>
-              <p>Try another search or category.</p>
+              <h3>Loading products...</h3>
+              <p>Please wait while we fetch our collection.</p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {!isLoading && error && (
+            <div className="empty-state">
+              <h3>Unable to load products</h3>
+              <p>{error}</p>
 
               <button
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory("All");
-                }}
+                type="button"
+                onClick={() => setRetryCount((prev) => prev + 1)}
               >
-                Clear filters
+                Try Again
               </button>
             </div>
+          )}
 
+          {/* Empty API Response */}
+          {!isLoading && !error && products.length === 0 && (
+            <div className="empty-state">
+              <h3>No products available</h3>
+              <p>Please check back later.</p>
+            </div>
+          )}
+
+          {/* Product List */}
+          {!isLoading && !error && products.length > 0 && (
+            filteredProducts.length > 0 ? (
+              <div className="product-grid">
+                {filteredProducts.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <h3>No products found</h3>
+                <p>Try another search or category.</p>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedCategory("All");
+                  }}
+                >
+                  Clear filters
+                </button>
+              </div>
+            )
           )}
 
         </section>

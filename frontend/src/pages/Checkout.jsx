@@ -1,12 +1,20 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowLeft, ShoppingBag, CheckCircle } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, ShoppingBag } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import { createOrder } from "../services/api";
 import "../App.css";
 
 function Checkout() {
-  const { cart, cartCount, cartTotal } = useCart();
+  const {
+    cart,
+    cartCount,
+    cartTotal,
+    clearCart
+  } = useCart();
+
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -17,7 +25,8 @@ function Checkout() {
     pincode: "",
   });
 
-  const [isValidated, setIsValidated] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const formatPrice = (price) =>
     `₹${price.toLocaleString("en-IN")}`;
@@ -30,15 +39,49 @@ function Checkout() {
       [name]: value,
     }));
 
-    setIsValidated(false);
+    setError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (cart.length === 0) return;
+    if (cart.length === 0 || isSubmitting) return;
 
-    setIsValidated(true);
+    try {
+      setIsSubmitting(true);
+      setError("");
+
+      const orderData = {
+        customer: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        address: formData.address.trim(),
+        city: formData.city.trim(),
+        pincode: formData.pincode.trim(),
+
+        items: cart.map((item) => ({
+          productId: item.id,
+          quantity: item.quantity,
+        })),
+      };
+
+      const response = await createOrder(orderData);
+
+      // Clear cart only after successful order creation
+      clearCart();
+
+      // Navigate to confirmation page with actual order details
+      navigate("/order-success", {
+        state: {
+          order: response.order
+        }
+      });
+
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (cart.length === 0) {
@@ -48,6 +91,7 @@ function Checkout() {
           <ShoppingBag size={45} />
           <h2>Your cart is empty</h2>
           <p>Add products before proceeding to checkout.</p>
+
           <Link to="/" className="details-button">
             Explore Products
           </Link>
@@ -66,24 +110,20 @@ function Checkout() {
       <div className="checkout-heading">
         <p className="section-label">ALMOST THERE</p>
         <h1>Checkout</h1>
-        <p>Enter your delivery details to continue.</p>
+        <p>Enter your delivery details to place your order.</p>
       </div>
 
-      {isValidated && (
-        <div className="checkout-validation-success">
-          <CheckCircle size={20} />
-          <div>
-            <strong>Details validated successfully!</strong>
-            <p>
-              Your checkout information is ready.
-              Actual order placement will be enabled during API integration.
-            </p>
-          </div>
+      {error && (
+        <div className="checkout-error">
+          <strong>Unable to place order</strong>
+          <p>{error}</p>
+          <p>Please check your details and try again.</p>
         </div>
       )}
 
       <div className="checkout-layout">
         <form className="checkout-form" onSubmit={handleSubmit}>
+
           <section className="checkout-section">
             <h2>Customer Information</h2>
 
@@ -180,8 +220,12 @@ function Checkout() {
             </div>
           </section>
 
-          <button type="submit" className="place-order-btn">
-            Proceed to Pay
+          <button
+            type="submit"
+            className="place-order-btn"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Placing Order..." : "Place Order"}
           </button>
         </form>
 
