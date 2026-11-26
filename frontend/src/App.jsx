@@ -1,122 +1,185 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useState, useEffect, useRef } from "react";
+
+import Navbar from "./components/Navbar";
+import CategoryFilter from "./components/CategoryFilter";
+import ProductCard from "./components/ProductCard";
+
+import products from "./data/products";
+
+import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Category state
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+  // Cart state
+  const [cart, setCart] = useState([]);
+
+  // Reference for the search input
+  const searchRef = useRef(null);
+
+  // Get unique categories
+  const categories = [
+    "All",
+    ...new Set(products.map((product) => product.category))
+  ];
+
+  // Update document title
+  useEffect(() => {
+    document.title = "MINIMART | Everyday Essentials";
+  }, []);
+
+  // Focus search when the "/" key is pressed
+  useEffect(() => {
+    function handleKeyDown(event) {
+      if (
+        event.key === "/" &&
+        document.activeElement.tagName !== "INPUT" &&
+        document.activeElement.tagName !== "TEXTAREA"
+      ) {
+        event.preventDefault();
+        searchRef.current?.focus();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  // Filter products
+  const filteredProducts = products.filter((product) => {
+
+    const matchesCategory =
+      selectedCategory === "All" ||
+      product.category === selectedCategory;
+
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesCategory && matchesSearch;
+  });
+
+  // Add product to cart
+  const handleAddToCart = (product) => {
+    setCart((previousCart) => {
+      const existingItem = previousCart.find(
+        (item) => item.id === product.id
+      );
+
+      if (existingItem) {
+        return previousCart.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      }
+
+      return [
+        ...previousCart,
+        { ...product, quantity: 1 }
+      ];
+    });
+  };
+
+  // Calculate total cart quantity
+  const cartCount = cart.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
+    <div className="app">
+
+      <Navbar
+        cartCount={cartCount}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        searchRef={searchRef}
+      />
+
+      <main className="main-container">
+
+        <section className="hero-section">
+          <p className="hero-label">SIMPLE THINGS. BETTER LIVING.</p>
+
+          <h1>
+            Everyday essentials,
+            <br />
+            thoughtfully selected.
+          </h1>
+
+          <p className="hero-description">
+            Discover useful products designed to make
+            everyday life a little simpler.
           </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+        </section>
 
-      <div className="ticks"></div>
+        <section className="shop-section">
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+          <div className="section-heading">
+            <div>
+              <p className="section-label">OUR COLLECTION</p>
+              <h2>Explore products</h2>
+            </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+            <span className="product-count">
+              {filteredProducts.length} products
+            </span>
+          </div>
+
+          <CategoryFilter
+            categories={categories}
+            selectedCategory={selectedCategory}
+            onCategoryChange={setSelectedCategory}
+          />
+
+          {filteredProducts.length > 0 ? (
+
+            <div className="product-grid">
+              {filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAddToCart={handleAddToCart}
+                />
+              ))}
+            </div>
+
+          ) : (
+
+            <div className="empty-state">
+              <h3>No products found</h3>
+              <p>Try another search or category.</p>
+
+              <button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedCategory("All");
+                }}
+              >
+                Clear filters
+              </button>
+            </div>
+
+          )}
+
+        </section>
+
+      </main>
+
+      <footer className="footer">
+        <p>© 2026 MINIMART. Made for everyday living.</p>
+      </footer>
+
+    </div>
+  );
 }
 
-export default App
+export default App;
